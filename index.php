@@ -91,10 +91,29 @@
 
 <?php
 
-// check if form submitted
+// function to calculate electricity
+function calculateElectricity($voltage, $current, $rate, $hour)
+{
+    // calculate power
+    $power = ($voltage * $current) / 1000;
+
+    // calculate energy
+    $energy = $power * $hour;
+
+    // convert sen to RM and calculate total
+    $total = $energy * ($rate / 100);
+
+    // return all values
+    return [
+        'power' => $power,
+        'energy' => $energy,
+        'total' => $total
+    ];
+}
+
+// check form submit
 if(isset($_POST['voltage']))
 {
-    // get values
     $voltage = $_POST['voltage'];
 
     $current = $_POST['current'];
@@ -116,11 +135,9 @@ if(isset($_POST['voltage']))
     }
     else
     {
-        // calculate power in kW
-        $power = ($voltage * $current) / 1000;
+        // calculate first hour for display
+        $firstResult = calculateElectricity($voltage, $current, $rate, 1);
 
-        // convert sen to RM
-        $rateRM = $rate / 100;
 ?>
 
     <!-- Result Section -->
@@ -145,12 +162,7 @@ if(isset($_POST['voltage']))
 
         <p>
             <b>Power :</b>
-            <?php echo number_format($power, 5); ?> kW
-        </p>
-
-        <p>
-            <b>Rate :</b>
-            RM <?php echo number_format($rateRM, 3); ?>
+            <?php echo number_format($firstResult['power'], 5); ?> kW
         </p>
 
         <!-- Result Table -->
@@ -165,14 +177,12 @@ if(isset($_POST['voltage']))
 
 <?php
 
-        // calculate from 1 hour to 24 hours
+        // loop 24 hours
         for($hour = 1; $hour <= 24; $hour++)
         {
-            // calculate energy
-            $energy = $power * $hour;
+            // call function
+            $result = calculateElectricity($voltage, $current, $rate, $hour);
 
-            // calculate total
-            $total = $energy * $rateRM;
 ?>
 
             <tr>
@@ -181,9 +191,9 @@ if(isset($_POST['voltage']))
 
                 <td><?php echo $hour; ?></td>
 
-                <td><?php echo number_format($energy, 5); ?></td>
+                <td><?php echo number_format($result['energy'], 5); ?></td>
 
-                <td><?php echo number_format($total, 2); ?></td>
+                <td><?php echo number_format($result['total'], 2); ?></td>
 
             </tr>
 
